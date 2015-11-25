@@ -1,0 +1,106 @@
+<html>
+	<head>
+		<script src="http://cdn.jsdelivr.net/webjars/org.webjars/d3js/3.5.5/d3.min.js"></script>
+		<style>
+			body {
+				background-color: black;
+			}
+			text {
+				color: red;
+				font-size: 16pt;
+			}
+		</style
+	</head>
+	<body>
+		<script>
+			
+			var width = 600
+			var height = 600
+			var maxRadius = 300
+			var data = [0, 0, 0, 0]
+			var size = 50
+			var gap = 5
+			
+			var scale = [
+				{
+					angle: d3.scale.linear().domain([0, 1000]).range([0, 2 * Math.PI]),
+					color: d3.scale.linear().domain([0, 1000]).range(["#ecf0f1", "#8e44ad"])
+				},
+				{
+					angle: d3.scale.linear().domain([0, 60]).range([0, 2 * Math.PI]),
+					color: d3.scale.linear().domain([0, 60]).range(["#ecf0f1", "#c0392b"])
+				},
+				{
+					angle: d3.scale.linear().domain([0, 60]).range([0, 2 * Math.PI]),
+					color: d3.scale.linear().domain([0, 60]).range(["#ecf0f1", "#f39c12"])
+				},
+				{
+					angle: d3.scale.linear().domain([0, 24]).range([0, 2 * Math.PI]),
+					color: d3.scale.linear().domain([0, 24]).range(["#ecf0f1", "#27ae60"])
+				}
+			]
+			
+			var svg = d3.select("body")
+				.append("svg")
+					.attr("height", height)
+					.attr("width", width)
+					
+			var group = svg.append("g")
+				.attr("transform", "translate(" + width/2 + ", " + height/2 + ")")
+			
+			var group2 = svg.append("g")
+				.attr("transform", "translate(" + width/2 + ", " + height/2 + ")")
+			
+			var arc = d3.svg.arc()
+				.startAngle(0)
+				.endAngle(function(d, i) {return scale[i].angle(d)})
+				.outerRadius(function(d, i) {return maxRadius - i * size})
+				.innerRadius(function(d, i) {return maxRadius - (i + 1) * size + gap})
+			
+			var arcs = group.selectAll(".arc")
+				.data(data)
+					.enter()
+					
+			var labels = group2.selectAll("text")
+				.data(data)
+					.enter()
+						.append("text")
+							.attr("text-anchor", "middle")
+							.attr("fill", "white")
+				
+			arcs.append("path")
+				.attr("class", "arc")
+				.attr("d", arc)
+				.attr("fill", function(d, i) {return scale[i].color(d)})
+				
+			var labelPosition = function(angle, i) {
+				var r = maxRadius - i * size - size/2 + gap/2
+				return {
+					x: r * Math.sin(angle + 0.11),
+					y: -r * Math.cos(angle + 0.11)
+				}
+			}
+							
+			d3.timer(function() {
+				var date = new Date()
+				data[0] = date.getMilliseconds()
+				data[1] = date.getSeconds()
+				data[2] = date.getMinutes() 
+				data[3] = date.getHours()
+				
+				group.selectAll(".arc")
+					.data(data)
+						.attr("d", arc)
+						.attr("fill", function(d, i) {return scale[i].color(d)})
+						
+				group2.selectAll("text")
+					.data(data)
+						.text(function(d) {return d})
+						.attr("x", function(d, i) {return labelPosition(scale[i].angle(d), i).x})
+						.attr("y", function(d, i) {return labelPosition(scale[i].angle(d), i).y})
+						
+			})
+			
+		</script>
+	</body>
+</html>

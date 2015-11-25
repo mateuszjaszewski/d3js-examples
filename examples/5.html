@@ -1,0 +1,70 @@
+<html>
+	<head>
+		<script src="http://cdn.jsdelivr.net/webjars/org.webjars/d3js/3.5.5/d3.min.js"></script>
+	</head>
+	<body>
+		<script>
+			var width = 550
+			var height = 550
+			
+			var data = {
+				name: "Node 1",
+				children: [
+					{name: "Node 2"}, 
+					{name: "Node 3"},
+					{
+						name: "Node 4",
+						children: [
+							{name: "Node 5"},
+							{name: "Node 6"}
+						]
+					}
+				]
+			}
+			
+			
+			var svg = d3.select('body')
+				.append('svg')
+					.attr('width', width)
+					.attr('height', height)
+					
+			var g = svg.append('g')
+				.attr('transform', 'translate(0, 50)')
+					
+			var treeLayout = d3.layout.tree()
+				.size([400, 400])
+				
+			var nodes = treeLayout.nodes(data)
+			var links = treeLayout.links(nodes)
+			
+			g.selectAll('circle')
+				.data(nodes)
+					.enter()
+						.append('circle')
+							.attr('cx', function(d) {return d.x} )
+							.attr('cy', function(d) {return d.y} )
+							.attr('r', 10)
+							.attr('fill', '#d35400')
+			
+			g.selectAll('text')
+				.data(nodes)
+					.enter()
+						.append('text')
+							.attr('x', function(d) {return d.x} )
+							.attr('y', function(d) {return d.y} )
+							.text(function(d) {return d.name})
+			
+			var diagonal = d3.svg.diagonal()
+				
+			g.selectAll('path')
+				.data(links)
+					.enter()
+						.append('path')
+							.attr('d', diagonal)
+							.attr('stroke', '#2c3e50')
+							.attr('fill', 'none')
+			
+			
+		</script>
+	</body>
+</html>

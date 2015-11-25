@@ -1,0 +1,49 @@
+<html>
+	<head>
+		<script src="http://cdn.jsdelivr.net/webjars/org.webjars/d3js/3.5.5/d3.min.js"></script>
+	</head>
+	<body>
+		<script>
+			var width = 500
+			var height = 500
+			
+			var data = [
+				{x: 100, h: 103123},
+				{x: 200, h: 313123},
+				{x: 300, h: 603123},
+				{x: 400, h: 420323},
+			]
+			
+			var maxH = d3.max(data, function(d) {return d.h})
+			console.log(maxH)
+			
+			var hScale = d3.scale.linear()
+				.domain([0,maxH])
+				.range([0, 600])
+				
+			var colorScale = d3.scale.linear() 
+				.domain([0, maxH/2, maxH])
+				.range(['red', 'yellow', 'green'])
+			
+			var svg = d3.select('body')
+				.append('svg')
+					.attr('width', width)
+					.attr('height', height)
+			
+			var group = svg.append('g')
+				.attr('transform', 'translate(0, '+ height + '), scale(1,-1)')
+				
+			var rects = group.selectAll('rect')
+				.data(data)
+					.enter()
+						.append('rect')
+							.attr('x', function(d) {return d.x})
+							.attr('y', 0)
+							.attr('width', 50)
+							.attr('height', function(d) {return hScale(d.h)})
+							.attr('fill', function(d) {return colorScale(d.h)}) 
+						
+			
+		</script>
+	</body>
+</html>
