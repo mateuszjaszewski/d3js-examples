@@ -2,10 +2,16 @@
 <head>
 	<meta charset="utf-8">
 	<script src="http://cdn.jsdelivr.net/webjars/org.webjars/d3js/3.5.5/d3.min.js"></script>
+	
+    <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+  
 	<style>
-		.tag {
+		.awc-container {
+		}
+		.awc-word {
+			font-family: 'Montserrat', sans-serif;
 			position: absolute;
-			padding: 1px;
+			padding: 2px;
 		}
 	</style>
 </head>
@@ -96,53 +102,12 @@
 		{tag: "Statystyka", frequency: 134},
 		{tag: "Park", frequency: 895},
 		{tag: "Karaluch", frequency: 112},
-		{tag: "Kino", frequency: 67},
-		{tag: "Test", frequency: 100},
-		{tag: "Piwo", frequency: 10},
-		{tag: "Polska", frequency: 23},
-		{tag: "Mistrz", frequency: 1030},
-		{tag: "Programowanie", frequency: 10},
-		{tag: "Algorytm", frequency: 50},
-		{tag: "Wizualizacja", frequency: 120},
-		{tag: "Warszawa", frequency: 150},
-		{tag: "Słownik", frequency: 13},
-		{tag: "Krotka", frequency: 34},
-		{tag: "Malina", frequency: 244},
-		{tag: "Słowo", frequency: 653},
-		{tag: "Książka", frequency: 343},
-		{tag: "Telefon", frequency: 76},
-		{tag: "Aplikacja", frequency: 12},
-		{tag: "Kino", frequency: 67},
-		{tag: "Książka", frequency: 343},
-		{tag: "Karaluch", frequency: 112},
-		{tag: "Kino", frequency: 67},
-		{tag: "Test", frequency: 100},
-		{tag: "Piwo", frequency: 10},
-		{tag: "Polska", frequency: 23},
-		{tag: "Mistrz", frequency: 1030},
-		{tag: "Programowanie", frequency: 10},
-		{tag: "Algorytm", frequency: 50},
-		{tag: "Wizualizacja", frequency: 120},
-		{tag: "Warszawa", frequency: 150},
-		{tag: "Słownik", frequency: 13},
-		{tag: "Krotka", frequency: 34},
-		{tag: "Malina", frequency: 244},
-		{tag: "Słowo", frequency: 653},
-		{tag: "Książka", frequency: 343},
-		{tag: "Telefon", frequency: 76},
-		{tag: "Aplikacja", frequency: 12},
-		{tag: "Studia", frequency: 7},
-		{tag: "Losowość", frequency: 2320},
-		{tag: "Statystyka", frequency: 134},
-		{tag: "Park", frequency: 895},
 	]
 
-	var width = window.innerWidth;
-	var height = window.innerHeight;
-	var center = new Point(width / 2, height / 2)
 	var fontSizeRange = [10, 65]
-
 	var boundingBoxes = []
+	var margin = 10
+
 	var intersect = function (box1, box2) {
 		return !((box1.x + box1.width < box2.x) || (box2.x + box2.width < box1.x) || (box1.y + box1.height < box2.y) || (box2.y + box2.height < box1.y))
 	}
@@ -167,9 +132,9 @@
 		return new Point(x, y)
 	}
 
-	var intersectWithOtherBoundingBox = function (bb) {
+	var intersectWithOtherBoundingBox = function (boundingBox) {
 		for (var i in boundingBoxes) {
-			if (intersect(bb, boundingBoxes[i])) {
+			if (intersect(boundingBox, boundingBoxes[i])) {
 				return true
 			}
 		}
@@ -181,30 +146,52 @@
 			.domain(frequencyDomain)
 			.range(fontSizeRange)
 
-//	data = data.sort(function (a, b) {return b.frequency - a.frequency})
-	d3.select('body').selectAll('span')
+	data = data.sort(function (a, b) {return b.frequency - a.frequency})
+	d3.select('body').selectAll('.awc-word')
 		.data(data)
 			.enter()
 				.append('span')
-				.attr('class', 'tag')
+				.attr('class', 'awc-word')
 				.text(function (d) {return d.tag.toUpperCase()})
 				.style('font-size', function (d) {return scale(d.frequency)})
 				.each(function () {
 					var direction = nextDirection()
-					var position = center
-					var textWidth = this.getBoundingClientRect().width
-					var textHeight = this.getBoundingClientRect().height
-					var boundingBox = new Box(position.x - textWidth / 2, position.y - textHeight / 2, textWidth, textHeight)
+					var boundingBox = new Box(0, 0, this.getBoundingClientRect().width, this.getBoundingClientRect().height)
 					while (intersectWithOtherBoundingBox(boundingBox)) {
-						position.x += direction.x
-						position.y += direction.y
-						boundingBox =  new Box(position.x - textWidth / 2, position.y - textHeight / 2, textWidth, textHeight)
+						boundingBox.x += direction.x
+						boundingBox.y += direction.y
 					}
 					boundingBoxes.push(boundingBox)
-					d3.select(this)
-						.style('top', position.y - textHeight / 2)
-						.style('left', position.x - textWidth / 2)
 				})
+
+	var render = function () {
+		var containerWidth = window.innerWidth;
+		var containerHeight = window.innerHeight;
+
+		var minX = d3.min(boundingBoxes, function (box) {return box.x})
+		var minY = d3.min(boundingBoxes, function (box) {return box.y})
+
+		var width = d3.max(boundingBoxes, function (box) {return box.x + box.width}) - minX
+		var height = d3.max(boundingBoxes, function (box) {return box.y + box.height}) - minY
+
+		var ratio = Math.min((containerWidth - 2 * margin)  / width, (containerHeight - 2 * margin) / height)
+		d3.select('body').selectAll('.awc-word')
+			.data(data)
+				.style('font-size', function (d) {
+					return scale(d.frequency) * ratio
+				})
+				.style('top', function (d, i) {
+					return (boundingBoxes[i].y - minY - height / 2) * ratio + containerHeight / 2 + margin / 2
+				})
+				.style('left', function (d, i) {
+					return (boundingBoxes[i].x - minX - width / 2) * ratio + containerWidth / 2 + margin / 2
+				})
+	}
+	render()
+
+	window.onresize = function () {
+		render()
+	}
 </script>
 </body>
 </html>
